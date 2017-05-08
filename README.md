@@ -1,20 +1,32 @@
-#Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Introduction
+Vincent Driessen's [GitFlow](http://nvie.com/posts/a-successful-git-branching-model/) has helped countless teams standardize process with respect to utilizing Git ... without his intial work subsequent [discussion](http://endoflineblog.com/gitflow-considered-harmful) and follow-up [discussion](http://endoflineblog.com/follow-up-to-gitflow-considered-harmful) would not be possible.
 
-#Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+[OneFlow](http://endoflineblog.com/oneflow-a-git-branching-model-and-workflow) addresses many of the challenges identified with GitFlow.  At the end of the day, the power in these approaches is the standard use of Git within a team environment - the good news is that there are many great workflows available when using Git - pick what works best in context of your particular objective(s) and team(s)!
 
-#Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+## This Project
+This project seeks to emdody the goodness of OneFlow in four core Git aliases `bnew`, `bup`, `bpush`, and `bdone`.  We've had success getting team members new to Git up and running quickly - of course the ultimate goal is to produce a level of proficiency where team members understand what the scripts are doing such that they are not needed but simply a creature comfort.
 
-#Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Getting Started
+1.	Clone this repo
+2.	From a shell prompt run `make-gitconfig.sh` - take a look a the local .gitconfig - to make changes to your global .gitconfig run `make-gitconfig.sh -g`
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://www.visualstudio.com/en-us/docs/git/create-a-readme). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+## Basic Workflow
+* Initial clone
+    1. `git clone repo`
+    2. `git checkout develop`
+* Feature work
+    1. `git bnew -f “A Short Description”`
+    2. `git commit -am “A shortish (50 character) commit message”`
+* Periodically make sure you are up to date with the remote and resolve any merge conflicts early!
+    1. `git bup or bfresh [-r]`
+* At the end of the day make sure your work is on the remote
+    1. `git bpush or bsaved [-r]`
+* Create a PR when your code is a candidate to be merged into develop and you are ready for a code review
+* After the PR has been merged into develop
+    1. `git bdone`
+
+## Todo
+1. PowerShell version of `make-gitconfig`
+2. Potentially more switches -  for example make minimal changes to .gitconfig, etc
+3. brelease
+4. ...

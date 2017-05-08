@@ -2,98 +2,111 @@
 set -euo pipefail;
 IFS=$'\n\t';
 
-TEMP=$(git symbolic-ref --short HEAD);
-declare -r THIS_BR=$TEMP;
-TEMP=$(git config user.initials);
-declare -r MY_INTLS=$TEMP;
-BR_AFX="";
-BR_POINT="";
-BR_NAME="";
-BR_FLG="";
-MGT_FLG=0;
-UPD_FLG=0;
+bnew() {
+    local -r this_br=$(git symbolic-ref --short HEAD);
+    local -r my_intls=$(git config user.initials);
+    local br_afx='';
+    local br_desc='';
+    local br_name='';
+    local br_point='';
+    local mgt_act='';
+    local mgt_act_pat='';
+    local br_flg='';
+    local mgt_flg=0;
+    local upd_flg=0;
 
-cob() {
-    [[ $THIS_BR != "$BR_POINT" ]] && git checkout "$BR_POINT" && {
-        if [[ $UPD_FLG -eq 1 ]]; then
-            git pprint -io "Updating branch '$BR_POINT'!";
-            git pull "${2-origin}" "$BR_POINT" && git checkout -b "$BR_NAME" && git pprint -so "bnew succeeded!";
+    cob() {
+        if [[ $this_br != "$br_point" ]]; then
+            git checkout "$br_point";
+        fi && {
+            if [[ $upd_flg -eq 1 ]]; then
+                git pprint -io "Updating branch '$br_point'";
+                git pull "${2-origin}" "$br_point";
+            fi && git checkout -b "$br_name" && git pprint -so "bnew succeeded!";
+        };
+
+        return $?;
+    };
+
+    migrate() {
+        git bmigrate "$br_name" "$br_point" && {
+            if [[ $upd_flg -eq 1 ]]; then
+                git bup;
+            fi && git pprint -so "bnew succeeded!";
+            };
+
+        return $?;
+    };
+
+    # Process command options
+    while getopts ':fhrum' flg; do
+        case $flg in
+        f)
+            if [[ -z $br_flg ]]; then
+                br_flg=$flg;
+                br_point='develop';
+                br_afx=$(git config workflow.featureaffix);
+            fi;;
+        h)
+            if [[ -z $br_flg ]]; then
+                br_flg=$flg;
+                br_point='master';
+                br_afx=$(git config workflow.hotfixaffix);
+            fi;;
+        r)
+            if [[ -z $br_flg ]]; then
+                br_flg=$flg;
+                br_point='develop';
+                br_afx=$(git config workflow.releaseaffix);
+            fi;;
+        m)
+            mgt_flg=1;;
+        u)
+            upd_flg=1;;
+        *)
+            git pprint -eo "Invalid option expecting '<-f|h|r[m][u]>'!";
+            exit 1;;
+        esac
+    done;
+    shift $((OPTIND - 1));
+
+    [[ -z $br_flg ]] && { git pprint -eo "A flag '<-f|h|r>' indicating the kind of branch to create is required!"; exit 1; };
+
+    br_desc=${1:-};
+    [[ -z $br_desc ]] && { git pprint -eo "Option '-$br_flg' requires an argument like my-new-branch!"; exit 1; };
+
+    br_name=${br_afx}"/${my_intls}/"$(git check-ref-format --branch "$(git trimcompactreplacespace -l "$br_desc" '-')");
+
+    if [[ -n $(git branch --list "$br_name") ]]; then
+        git pprint -eo "A branch named '$br_name' already exists!";
+    elif [[ $mgt_flg -eq 1 || -n $(git status --porcelain) ]]; then
+        # Handle the dirty working dir
+        if [[ -n $(git status --porcelain) ]]; then
+            # Don't commit anything to develop or master
+            if [[ $this_br = 'develop' || $this_br = 'master' ]]; then
+                git pprint -gf "We noticed your working directory is dirty! - changes must be committed to the new branch '$br_name' (n) or you may abort (a).\n" | fold -sw 100;
+                mgt_act_pat="^[nN]$|^[aA]$";
+            else
+                git pprint -gf "We noticed your working directory is dirty! Would you like to commit your changes to the new branch $(tput setaf 7)'$br_name'$(tput setaf 5) (n), this_br branch $(tput setaf 7)'$this_br'$(tput setaf 5) (c), or you may abort (a).\n" | fold -sw 100;
+                mgt_act_pat="^[nN]$|^[cC]$|^[aA]$";
+            fi;
+
+            mgt_act=$(git pprint -pd "Default is commit to the the new branch '$br_name' (n)?: ") && echo;
+            [[ $mgt_act =~ $mgt_act_pat ]] && mgt_act=$(git trim "$mgt_act" | tr '[:upper:]' '[:lower:]') || mgt_act="n";
+            [[ $mgt_act = "a" ]] && exit 0;
+
+            if [[ $mgt_act = "c" ]]; then
+                git bcm && cob "$@";
+            else
+                migrate "$@";
+            fi;
         else
-            git checkout -b "$BR_NAME" && git pprint -so "bnew succeeded!";
-        fi; };
-};
-
-migrate() {
-    git bmigrate "$BR_NAME" "$BR_POINT" && {
-        if [[ $UPD_FLG -eq 1 ]]; then
-            git bup && git pprint -so "bnew succeeded!";
-        else
-            git pprint -so "bnew succeeded!";
-        fi; };
-};
-
-# Process command options
-while getopts ":fhrum" FLG; do
-    case $FLG in
-    f)
-        BR_AFX=$(git config workflow.featureaffix);
-        [[ -z $BR_FLG ]] && BR_FLG=$FLG;
-        BR_POINT='develop';;
-    h)
-        BR_AFX=$(git config workflow.hotfixaffix);
-        [[ -z $BR_FLG ]] && BR_FLG=$FLG;
-        BR_POINT='master';;
-    r)
-        BR_AFX=$(git config workflow.releaseaffix);
-        [[ -z $BR_FLG ]] && BR_FLG=$FLG;
-        BR_POINT='develop';;
-    m)
-        MGT_FLG=1;;
-    u)
-        UPD_FLG=1;;
-    *)
-        git pprint -eo "Invalid option expecting '<-f|h|r[m][u]>'!";
-        exit 1;;
-    esac
-done;
-shift $((OPTIND - 1));
-
-BR_DESC=${1:-};
-
-[[ -z $BR_FLG ]] && { git pprint -eo "A flag '<-f|h|r>' indicating the kind of branch to create is required!"; exit 1; };
-[[ -z $BR_DESC ]] && { git pprint -eo "Option '-$BR_FLG' requires an argument like my-new-branch!$"; exit 1; };
-
-BR_NAME=${BR_AFX}"/${MY_INTLS}/"$(git check-ref-format --branch "$(git trimcompactreplacespace -l "${1}" '-')");
-
-if [[ -n $(git branch --list "$BR_NAME") ]]; then
-    git pprint -eo "A branch named '$BR_NAME' already exists!";
-elif [[ $MGT_FLG -eq 1 || -n $(git status --porcelain) ]]; then
-    # Handle the dirty working dir
-    if [[ -n $(git status --porcelain) ]]; then
-        MGT_ACT_PAT="";
-
-        # Don't commit anything to develop or master
-        if [[ $THIS_BR = 'develop' || $THIS_BR = 'master' ]]; then
-            git pprint -gf "We noticed your working directory is dirty! - changes must be committed to the new branch '$BR_NAME' (n) or you may abort (a).\n" | fold -sw 100;
-            MGT_ACT_PAT="^[nN]$|^[aA]$";
-        else
-            git pprint -gf "We noticed your working directory is dirty! Would you like to commit your changes to the new branch $(tput setaf 7)'$BR_NAME'$(tput setaf 5) (n), THIS_BR branch $(tput setaf 7)'$THIS_BR'$(tput setaf 5) (c), or you may abort (a).\n" | fold -sw 100;
-            MGT_ACT_PAT="^[nN]$|^[cC]$|^[aA]$";
-        fi;
-
-        MGT_ACT=$(git pprint -pd "Default is commit to the the new branch '$BR_NAME' (n)?: ") && echo;
-        [[ $MGT_ACT =~ $MGT_ACT_PAT ]] && MGT_ACT=$(git trim "$MGT_ACT" | tr '[:upper:]' '[:lower:]') || MGT_ACT="n";
-        [[ $MGT_ACT = "a" ]] && exit 0;
-
-        if [[ $MGT_ACT = "c" ]]; then
-            git bcm && cob "$@";
-        else
+            git pprint -gf "The number of commits you specify will be moved from '$this_br' to the new branch '$br_name'." | fold -sw 100;
             migrate "$@";
         fi;
     else
-        git pprint -gf "The number of commits you specify will be moved from '$THIS_BR' to the new branch '$BR_NAME'." | fold -sw 100;
-        migrate "$@";
+        cob "$@";
     fi;
-else
-    cob "$@";
-fi;
+};
+
+bnew "$@";
