@@ -1,0 +1,126 @@
+[user]
+	name = <First Last>
+	email = <email>
+	initials = <fl>
+[core]
+	editor = code --wait
+	safecrlf = warn
+	autocrlf = true
+[credential]
+	helper = manager
+[branch "develop"]
+	mergeoptions = --no-ff
+[branch "master"]
+	mergeoptions = --ff-only
+[fetch]
+	prune = true
+[pull]
+	rebase = preserve
+[push]
+	default = simple
+	followTags = true
+[rerere]
+	enabled = true
+[workflow]
+	featureaffix = feature
+	hotfixaffix = hotfix
+	releaseaffix = release
+	dorebase = false
+[alias]
+	ec = config --global -e
+	amend = commit --amend
+	br = branch
+	caa = commit -a --amend -C HEAD
+	ci = commit -m
+	# use without parameters for quick commits with a default message of 'SAVEPOINT" (equivalent to wip or save aliases)
+	cm = "!f() { git commit -am \"${1-SAVEPOINT}\"; }; f"
+	co = checkout
+	cob = checkout -b
+	cp = cherry-pick
+	cpa = cherry-pick --abort
+	cpc = cherry-pick --continue
+	# migrate
+	# $1 correct / new branch name required
+	# $2 target branch name optional defaults to develop
+	# $3 commit range optional defaults to the current / wrong branch remote tracking branch
+	migrate = "!f() { CORRECT_BR=${1:-}; [[ -z $CORRECT_BR ]] && { git pprint -eo \"'CORRECT_BR' is required!$\"; exit 1; }; WRONG_BR=$(git symbolic-ref --short HEAD); TARGET_BR=${2-develop}; if [[ -z $(git branch --list \"$CORRECT_BR\") ]]; then git checkout -b \"$CORRECT_BR\" && git branch -f \"$WRONG_BR\" \"${3-$WRONG_BR'@{u}'}\" && git rebase --onto \"$TARGET_BR\" \"$WRONG_BR\" && git pprint -io \"Commits migrated to '$CORRECT_BR'!\"; else git checkout \"$(git rev-parse HEAD)\" && git branch -f \"$WRONG_BR\" \"${3-$WRONG_BR'@{u}'}\" && git rebase --onto \"$CORRECT_BR\" \"$WRONG_BR\" && git checkout -B \"$CORRECT_BR\" HEAD && git pprint -io \"Commits migrated to '$CORRECT_BR'!\"; fi; }; f"
+	undo = "!f() { git reset --hard '@{'\"${1-1}\"'}'; }; f"
+	unstage = reset HEAD
+	rba = rebase --abort
+	rbc = rebase --continue
+	rbi = "!f() { git rebase -i \"$(git merge-base \"${1-develop}\" \"${2-HEAD}\")\"; }; f"
+	rbs = rebase --skip
+	wipe = "!f() { git add -A && git commit -qm 'WIPE SAVEPOINT' && git reset --hard HEAD~1; }; f"
+	# log
+	commit-chain = "!f() { git logbase --graph \"${1-develop}\"..\"${2-HEAD}\"; }; f"
+	follow = "!f() { git logbase --graph --follow \"$@\"; }; f"
+	last = "!f() { git log --decorate --stat \"${1--1}\" HEAD; }; f"
+	logbase = log --pretty='%C(bold blue)%h%C(reset) |%C(auto)%d%C(reset) %C(white)%s%C(reset) %C(bold yellow)(%ar) on (%aD)%C(reset) %C(bold cyan)[%an]%C(reset)'
+	lg = "!f() { git logbase --all --graph \"$@\"; }; f"
+	rlg = "!f() { git reflog \"$(git rev-parse --abbrev-ref HEAD)\"; }; f"
+	st = status
+	# simplified gitflow alias b*
+	# base command - bnew <-f|h|r[m|u]> branch short name
+	# creates and checkout new branch
+	# optionally migrates and or updates trunk branch (bpoint)
+	bnew = "!f() { set -euo pipefail; IFS=$'\n\t'; TEMP=$(git symbolic-ref --short HEAD); declare -r THIS_BR=$TEMP; TEMP=$(git config user.initials); declare -r MY_INTLS=$TEMP; BR_AFX=\"\"; BR_POINT=\"\"; BR_NAME=\"\"; BR_FLG=\"\"; MGT_FLG=0; UPD_FLG=0; cob() { [[ $THIS_BR != \"$BR_POINT\" ]] && git checkout \"$BR_POINT\" && { if [[ $UPD_FLG -eq 1 ]]; then git pprint -io \"Updating branch '$BR_POINT'!\"; git pull \"${2-origin}\" \"$BR_POINT\" && git checkout -b \"$BR_NAME\" && git pprint -so \"bnew succeeded!\"; else git checkout -b \"$BR_NAME\" && git pprint -so \"bnew succeeded!\"; fi; }; }; migrate() { git bmigrate \"$BR_NAME\" \"$BR_POINT\" && { if [[ $UPD_FLG -eq 1 ]]; then git bup && git pprint -so \"bnew succeeded!\"; else git pprint -so \"bnew succeeded!\"; fi; }; }; while getopts \":fhrum\" FLG; do case $FLG in f) BR_AFX=$(git config workflow.featureaffix); [[ -z $BR_FLG ]] && BR_FLG=$FLG; BR_POINT='develop';; h) BR_AFX=$(git config workflow.hotfixaffix); [[ -z $BR_FLG ]] && BR_FLG=$FLG; BR_POINT='master';; r) BR_AFX=$(git config workflow.releaseaffix); [[ -z $BR_FLG ]] && BR_FLG=$FLG; BR_POINT='develop';; m) MGT_FLG=1;; u) UPD_FLG=1;; *) git pprint -eo \"Invalid option expecting '<-f|h|r[m][u]>'!\"; exit 1;; esac done; shift $((OPTIND - 1)); BR_DESC=${1:-}; [[ -z $BR_FLG ]] && { git pprint -eo \"A flag '<-f|h|r>' indicating the kind of branch to create is required!\"; exit 1; }; [[ -z $BR_DESC ]] && { git pprint -eo \"Option '-$BR_FLG' requires an argument like my-new-branch!$\"; exit 1; }; BR_NAME=${BR_AFX}\"/${MY_INTLS}/\"$(git check-ref-format --branch \"$(git trimcompactreplacespace -l \"${1}\" '-')\"); if [[ -n $(git branch --list \"$BR_NAME\") ]]; then git pprint -eo \"A branch named '$BR_NAME' already exists!\"; elif [[ $MGT_FLG -eq 1 || -n $(git status --porcelain) ]]; then if [[ -n $(git status --porcelain) ]]; then MGT_ACT_PAT=\"\"; if [[ $THIS_BR = 'develop' || $THIS_BR = 'master' ]]; then git pprint -gf \"We noticed your working directory is dirty! - changes must be committed to the new branch '$BR_NAME' (n) or you may abort (a).\n\" | fold -sw 100; MGT_ACT_PAT=\"^[nN]$|^[aA]$\"; else git pprint -gf \"We noticed your working directory is dirty! Would you like to commit your changes to the new branch $(tput setaf 7)'$BR_NAME'$(tput setaf 5) (n), THIS_BR branch $(tput setaf 7)'$THIS_BR'$(tput setaf 5) (c), or you may abort (a).\n\" | fold -sw 100; MGT_ACT_PAT=\"^[nN]$|^[cC]$|^[aA]$\"; fi; MGT_ACT=$(git pprint -pd \"Default is commit to the the new branch '$BR_NAME' (n)?: \") && echo; [[ $MGT_ACT =~ $MGT_ACT_PAT ]] && MGT_ACT=$(git trim \"$MGT_ACT\" | tr '[:upper:]' '[:lower:]') || MGT_ACT=\"n\"; [[ $MGT_ACT = \"a\" ]] && exit 0; if [[ $MGT_ACT = \"c\" ]]; then git bcm && cob \"$@\"; else migrate \"$@\"; fi; else git pprint -gf \"The number of commits you specify will be moved from '$THIS_BR' to the new branch '$BR_NAME'.\" | fold -sw 100; migrate \"$@\"; fi; else cob \"$@\"; fi; }; f"
+	# base command - bup <-r> <remote[origin]> <trunk branch[develop]>
+	# updates trunk branch
+	# updates current branch
+	# replay current branch commits onto trunk branch if applicable
+	# -r interactive rebase of the current branch if applicable
+	bup = "!f() { set -euo pipefail; IFS=$'\n\t'; TEMP=$(git symbolic-ref --short HEAD); declare -r THIS_BR=$TEMP; PUSH_FLG=0; RBI_FLG=0; XPR_FLG=0; DID_BR_POINT_UPD=0; DID_BR_UPD=0; DID_BR_RPLY=0; DID_BR_RBI=0; DID_PROC_PUSH=0; while getopts \":pr\" FLG; do case $FLG in p) PUSH_FLG=1;; r) RBI_FLG=1;; x) XPR_FLG=1;; *) git pprint -eo \"Invalid option expecting '[-r|x]'!\"; exit 1;; esac done; shift $((OPTIND - 1)); if [[ $XPR_FLG -eq 0 ]]; then git pprint -io \"Updating branch '${2-develop}'!\"; git checkout \"${2-develop}\" && git pull && DID_BR_POINT_UPD=1; fi && { if [[ $THIS_BR != 'develop' && $THIS_BR != 'master' ]]; then if [[ $XPR_FLG -eq 0 ]]; then HAS_UPSTREAM=$(git ls-remote -h -q --refs \"${1-origin}\" \"$THIS_BR\"); git checkout \"$THIS_BR\" && { if [[ -n $HAS_UPSTREAM ]]; then git pprint -io \"Updating branch '$THIS_BR'!\"; git pull && DID_BR_UPD=1; elif [[ -n $(git rev-parse --symbolic-full-name '@{upstream}' 2>/dev/null) ]]; then git pprint -wo \"Unsetting upstream for '$THIS_BR'!\"; git branch --unset-upstream; fi; } && { if grep -q \"^feature\" <<< \"$THIS_BR\" && [[ $(git show-ref --heads -s \"${2-develop}\") != $(git merge-base \"${2-develop}\" \"$THIS_BR\") ]]; then git pprint -io \"Replaying '$THIS_BR' onto '${2-develop}'!\"; git rebase -p \"${2-develop}\" && DID_BR_RPLY=1; fi; } && git brbi ${RBI_FLG} \"${2-develop}\" \"$THIS_BR\" && DID_BR_RBI=1 && git pprint -so \"bup|fresh succeeded!\"; elif [[ $RBI_FLG -eq 1 ]]; then git pprint -wo \"Interactive rebase request will not be honored in eXpress push mode!\"; fi && { IS_PUSHED=$(git ispushed \"$@\"); if [[ $PUSH_FLG -eq 0 && $IS_PUSHED -eq 1 && ($DID_BR_RPLY || $DID_BR_RBI) ]]; then git pprint -wo \"'$THIS_BR' has been previously pushed - syncing with '${1-origin}'!\"; git push --force-with-lease && DID_PROC_PUSH=1; elif [[ $PUSH_FLG -eq 1 ]]; then if [[ $(git isinsyncwithrmt) -eq 0  ]]; then git pprint -io \"Pushing '$THIS_BR' to '${1-origin}'!\"; if [[ $IS_PUSHED -eq 1 ]]; then git push --force-with-lease && DID_PROC_PUSH=1; else git push -u \"${1-origin}\" \"$THIS_BR\" && DID_PROC_PUSH=1; fi; else git pprint -wo \"Nothing to push - '$THIS_BR' is in sync with '${1-origin}'!\"; DID_PROC_PUSH=1; fi; fi && [[ DID_PROC_PUSH -eq 1 ]] && git pprint -so \"bpush|saved succeeded!\" || :; }; else git pprint -wo \"Directly pushing to '$THIS_BR' is not allowed!\"; [[ $RBI_FLG -eq 1 ]] && git pprint -wo \"Rebase is not allowed for '$THIS_BR'!\"; [[ $DID_BR_POINT_UPD -eq 1 ]] && git pprint -so \"bup|fresh succeeded!\"; fi; }; }; f"
+	# wrapper command - bfresh -> bup
+	bfresh = "!f() { git bup \"$@\"; }; f"
+	# base command - bpush <-r> <remote[origin]> <trunk branch[develop]>
+	# executes bup
+	# pushes current branch to the remote
+	bpush = "!f() { set -euo pipefail; IFS=$'\n\t'; while getopts \":r\" FLG; do case $FLG in r) ;; x) ;; *) git pprint -eo \"Invalid option expecting '[-r|x]'!\"; exit 1;; esac done; git bup -p \"$@\"; }; f"
+	# wrapper command - bsaved -> bpush
+	bsaved = "!f() { git bpush \"$@\"; }; f"
+	# base command - bclean <remote[origin]> <trunk branch[develop]>
+	# delete local branches that have been merged or not diverged from trunk branch, develop, or master
+	# prunes remote branch references that have been removed from remote
+	bclean = "!f() { IFS=$'\n\t'; STALE_BR=$(git branch --merged \"${2-develop}\" | grep -E -v \"${2-develop}|develop|master$\"); set -euo pipefail; if [[ -n $STALE_BR ]]; then $STALE_BR | xargs git branch -d && git remote prune \"${1-origin}\" && git pprint -io \"Stale branches have been pruned!\"; else :; fi; }; f"
+    # base command - bdone
+	# updates develop branch
+	# executes bclean
+	bdone = "!f() { set -euo pipefail; IFS=$'\n\t'; git pprint -io \"Updating branch '${2-develop}'!\" && git checkout \"${2-develop}\" && git pull \"${1-origin}\" \"${2-develop}\" && git bclean \"${1-origin}\" \"${2-develop}\" && git pprint -so \"bdone succeeded!\"; }; f"
+	# internal simple gitflow helpers
+	bcm = "!f() { set -euo pipefail; IFS=$'\n\t'; TEMP=$(git symbolic-ref --short HEAD); declare -r THIS_BR=$TEMP; DID_COMMIT=0; DIRECT_FLG=0; while getopts \":d\" FLG; do case $FLG in d) DIRECT_FLG=1;; *) exit 1;; esac done; [[ $THIS_BR = 'develop' && $DIRECT_FLG -eq 0 ]] && git pprint -eo \"Direct commit to 'develop' is not allowed!\" && exit 1; [[ $THIS_BR = 'master' ]] && git pprint -eo \"Direct commit to 'master' is not allowed!\" && exit 1; if [[ $(git status --porcelain) ]]; then git pprint -gf \"Ok - lets get your working directory committed - here is your status and the last 5 commits.\n\" | fold -sw 100; git status && echo; git logbase --all --graph -5 && echo; ADD_PARAM=$(git pprint -pd \"Add tracked and untracked changes (a) or just tracked changes (t)? Default value is just tracked (t): \"); grep -E -w -i -q \"^a$|^t$\" <<< \"$ADD_PARAM\" && ADD_PARAM=$(git trim \"$ADD_PARAM\" | tr '[:upper:]' '[:lower:]') || ADD_PARAM=\"t\"; COMMIT_MSG=$(git pprint -pd \"Enter a commit message. Default value is 'SAVEPOINT': \"); [[ -z $COMMIT_MSG ]] && COMMIT_MSG='SAVEPOINT' || COMMIT_MSG=$(git trim \"$COMMIT_MSG\"); if [[ $ADD_PARAM = \"a\" ]]; then git add -A && git commit -m \"$COMMIT_MSG\" && DID_COMMIT=1; else git commit -am \"$COMMIT_MSG\" && DID_COMMIT=1; fi; [[ $DID_COMMIT -eq 1 ]] && git pprint -io \"Changes committed!\"; else git pprint -wo \"Nothing to commit - working directory is clean!\"; fi; }; f"
+	bmigrate = "!f() { set -euo pipefail; IFS=$'\n\t'; declare -r CORRECT_BR=${1:-}; declare -r TARGET_BR=${2:-}; declare -r WRONG_BR=${3-$(git symbolic-ref --short HEAD)}; DID_COMMIT=0; MAX_COMMITS=0; MV_PROMPT=\"\"; [[ -z $CORRECT_BR ]] && git pprint -eo \"'CORRECT_BR' is required!\" && exit 1; [[ -z $TARGET_BR ]] && git pprint -eo \"'TARGET_BR' is required!\" && exit 1; [[ -z $(git branch --list \"$TARGET_BR\") ]] && git pprint -eo \"The branch '$TARGET_BR' must exist!\" && exit 1; [[ -z $(git branch --list \"$WRONG_BR\") ]] && git pprint -eo \"The branch '$WRONG_BR' must exist!\" && exit 1; [[ $CORRECT_BR = \"$WRONG_BR\" ]] && git pprint -eo \"Check the command parameters - 'CORRECT_BR' and 'WRONG_BR' can not be equal!\" && exit 1; [[ $CORRECT_BR = 'master' || $WRONG_BR = 'master' ]] && git pprint -eo \"Modification of commits on 'master' is not allowed!\" && exit 1; [[ $CORRECT_BR = 'develop' ]] && git pprint -wf \"You are attempting to move commits to 'develop' - You may not be able to push 'develop' directly to the remote!\n\" '\n' && ABORT=$(git pprint -pd \"Press ENTER to continue or (a) to abort: \") && grep -E -w -i -q \"^a$\" <<< \"$ABORT\" && exit 1; [[ $WRONG_BR != $(git symbolic-ref --short HEAD) ]] && git pprint -wf \"Migration requires '$WRONG_BR' to be the current current branch - attempting to checkout '$WRONG_BR'\" '\n'  && [[ -z $(git checkout \"$WRONG_BR\" 2>/dev/null) ]] && git pprint -eo \"Checkout of '$WRONG_BR' failed!\" && exit 1; if [[ -n $(git status --porcelain) ]]; then git bcm -d && DID_COMMIT=1; MV_PROMPT=\"Commit '$(git rev-parse --short HEAD)' will be moved from '$WRONG_BR' to '$CORRECT_BR' - would you like to move additional commits? Max value is MAX_COMMITS. Default value is 0: \"; else MV_PROMPT=\"How many commits from '$WRONG_BR' to '$CORRECT_BR' would you like to move? Max value is MAX_COMMITS. Default value is 0: \"; fi; if [[ -n $(git rev-parse --abbrev-ref --symbolic-full-name @'{u}' 2>/dev/null) && $(git rev-list --count @'{u}'..) -gt 0 ]]; then MAX_COMMITS=$(git rev-list --count @'{u}'..); echo; git logbase @'{u}'..; echo; elif [[ $(git rev-list --count \"$TARGET_BR\"..HEAD) -gt 0 ]]; then MAX_COMMITS=$(git rev-list --count \"$TARGET_BR\"..HEAD); echo; git logbase --graph \"$TARGET_BR\"..'HEAD'; echo; else git pprint -eo \"No commits on '$WRONG_BR' can be safely moved!\"; exit 1; fi; [[ $DID_COMMIT -eq 1 ]] && MAX_COMMITS=$((MAX_COMMITS - 1)); [[ $MAX_COMMITS -gt 0 ]] && MV_PROMPT=$(sed 's/MAX_COMMITS/'\"$MAX_COMMITS\"'/g' <<< \"$MV_PROMPT\") && NUM_COMMITS=$(git pprint -pd \"$MV_PROMPT\"); [[ ${NUM_COMMITS} =~ ^[0-9]{1,}$ ]] && { [[ $NUM_COMMITS -gt $MAX_COMMITS ]] && NUM_COMMITS=$MAX_COMMITS || :; } || NUM_COMMITS=0; [[ $DID_COMMIT -eq 1 ]] && NUM_COMMITS=$((NUM_COMMITS + 1)); git migrate \"$CORRECT_BR\" \"$TARGET_BR\" HEAD~$NUM_COMMITS; }; f"
+	brbi = "!f() { set -euo pipefail; IFS=$'\n\t'; if [[ $1 -eq 1 ]] || grep -E -i -w -q \"true\" <<< \"$(git config workflow.dorebase)\"; then git pprint -io \"Checking if there are commits for interactive rebase!\"; if [[ $(git rev-list --count \"$2\"..\"$3\") -gt 0 ]]; then git pprint -io \"Starting interactive rebase for '$3'!\"; git rebase -i \"$(git merge-base \"$2\" \"$3\")\" else git pprint -eo \"No commits between '$2..$3' for interactive rebase!\"; fi; fi; }; f"
+	# remote repo
+	pushf = push --force-with-lease
+	pusht = push --follow-tags
+	up = "!f() { git pull \"$@\"; }; f"
+	# helpers
+	isinsyncwithrmt = "!f() { set -euo pipefail; IFS=$' \n\t'; while getopts \":*\" _; do :; done; shift $((OPTIND - 1)); [[ -n $(git rev-parse --symbolic-full-name '@{push}' 2>/dev/null) && $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref '@{push}' | sed 's%/% %g') | cut -f1) ]] && echo 1 || echo 0; }; f"
+	ispushed = "!f() { set -euo pipefail; IFS=$'\n\t'; while getopts \":*\" _; do :; done; shift $((OPTIND - 1)); vcmdrslt=$(git ls-remote -h -q --refs \"${1-origin}\" \"$(git symbolic-ref --short HEAD)\") && if [[ -n $vcmdrslt && -n $(git rev-parse --symbolic-full-name '@{push}') ]]; then echo 1; else echo 0; fi || exit 1; }; f"
+	pprint = "!f() { set -euo pipefail; IFS=$'\n\t'; RED=$(tput setaf 1); GRN=$(tput setaf 2); ORG=$(tput setaf 3); BLU=$(tput setaf 4); [[ $(git whichos) = 'WIN' ]] && BLU=$(tput setaf 6); PUR=$(tput setaf 5); WHT=$(tput setaf 7); RST=$(tput sgr0); STYLE_FLG=''; CMD_FLG=''; while getopts \":egipswdof\" FLG; do case $FLG in e) STYLE_FLG='e';; g) STYLE_FLG='g';; i) STYLE_FLG='i';; p) STYLE_FLG='p';; s) STYLE_FLG='s';; w) STYLE_FLG='w';; d) CMD_FLG='d';; f) CMD_FLG='f';; o) CMD_FLG='o';; *) echo \"$(tput setaf 1)Invalid option expecting '<-e|g|i|p|s[d|o|f]>'!$(tput sgr 0)\"; exit 1;; esac done; shift $((OPTIND - 1)); STRING=${1:-}; PREFIX=${2:-}; POSTFIX=${3:-}; [[ -z $STYLE_FLG ]] && { echo \"${RED}A flag '<-e|g|i|p|s>' indicating the output style is required!${RST}\"; exit 1; }; [[ -z $CMD_FLG ]] && { echo \"${RED}A flag '<-d|o|f>' indicating the command to use is required!${RST}\"; exit 1; }; [[ -z $STRING ]] && { echo \"${RED}A string to output is required!${RST}\"; exit 1; }; case $STYLE_FLG in e) STRING=\"${RED}==> $STRING${RST}\";; g) STRING=\"${PUR}==> $STRING${RST}\";; i) STRING=\"${BLU}==> $STRING${RST}\";; p) STRING=\"${WHT}==> $STRING${RST}\";; s) STRING=\"${GRN}==> $STRING${RST}\";; w) STRING=\"${ORG}==> $STRING${RST}\";; esac; case $CMD_FLG in d) read -p \"${PREFIX}${STRING}${POSTFIX}\" -r INPUT; echo \"$INPUT\";; o) echo \"${PREFIX}${STRING}${POSTFIX}\";; f) printf \"%s\n\" \"${PREFIX}${STRING}${POSTFIX}\";; esac; }; f"
+	trim = "!f() { set -euo pipefail; IFS=$'\n\t'; INPUT=${1:-}; [[ -z $INPUT ]] && { git pprint -eo \"A string to operate on is required!\"; exit 1; }; sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' <<< \"$INPUT\"; }; f"
+	trimcompactreplacespace = "!f() { set -euo pipefail; IFS=$'\n\t'; LWR_FLG=0; UPR_FLG=0; while getopts \":lu\" FLG; do case $FLG in l) LWR_FLG=1;; u) UPR_FLG=1;; *) git pprint -eo \"Invalid option expecting '[-l|u]'!\"; exit 1;; esac done; shift $((OPTIND - 1)); INPUT=${1:-}; PAT=${2:-}; [[ -z $INPUT ]] && { git pprint -eo \"A string to operate on is required!\"; exit 1; }; [[ -z $PAT ]] && { git pprint -eo \"A relacement string is required!\"; exit 1; }; PAT='s/ /'\"$PAT\"'/g'; git trim \"$INPUT\" | tr -s ' ' | if [[ LWR_FLG -eq 1 ]]; then tr '[:upper:]' '[:lower:]' | sed -e \"$PAT\"; elif [[ UPR_FLG -eq 1 ]]; then tr '[:lower:]' '[:upper:]' | sed -e \"$PAT\"; else sed -e \"$PAT\"; fi; }; f"
+	whichos = "!f() { set -euo pipefail; IFS=$'\n\t'; TEMP=$(uname -s); declare -r OS=$TEMP; OS_FAMILY=''; if [[ ${OS:0:6} = 'Darwin' ]]; then OS_FAMILY='OSX'; elif [[ ${OS:0:5} = 'Linux' ]]; then OS_FAMILY='LINUX'; elif [[ ${OS:0:10} = 'MINGW32_NT' ]]; then OS_FAMILY='WIN'; elif [[ ${OS:0:10} = 'MINGW64_NT' ]]; then OS_FAMILY='WIN'; fi; echo \"$OS_FAMILY\"; }; f"
+	# experimental / testing
+	colors = "!f() { set -euo pipefail; IFS=$'\n\t'; for i in {0..7}; do echo \"$(tput setaf \"$i\")Color $i$(tput sgr 0)\"; done;  }; f"
+	commandwithparams = "!f() { set -euo pipefail; IFS=$'\n\t'; echo \"${1-1}\" \"${2-2}\"; }; f"
+	parampass = "!f() { set -euo pipefail; IFS=$'\n\t'; git commandwithparams \"$@\"; }; f"
+	temptyparam = "!f() { set -euo pipefail; IFS=$'\n\t'; if [[ ! -z \"${1:-}\" ]]; then echo \"$1\"; echo \"${1// }\"; else echo \"Empty param\"; fi; }; f"
+	tgetopts = "!f() { set -euo pipefail; IFS=$'\n\t'; while getopts \":abc\" FLAG; do case $FLAG in *) echo \"$FLAG\" $OPTIND \"${OPTARG:-}\";; esac done; }; f"
+[diff]
+	tool = semanticmerge
+	#tool = vscode
+[difftool]
+	prompt = false
+[difftool "semanticmerge"]
+	cmd = \"C:\\Users\\<UserName>\\AppData\\Local\\semanticmerge\\semanticmergetool.exe\" -s \"$LOCAL\" -d \"$REMOTE\"
+[difftool "vscode"]
+	cmd = code --wait --diff $LOCAL $REMOTE
+[merge]
+	tool = semanticmerge
+[mergetool]
+  	prompt = false
+  	keepBackup = false
+[mergetool "semanticmerge"]
+	cmd = \"C:\\Users\\<UserName>\\AppData\\Local\\semanticmerge\\semanticmergetool.exe\" -s \"$LOCAL\" -d \"$REMOTE\" -b \"$BASE\" -r \"$MERGED\"
+	trustExitCode = true

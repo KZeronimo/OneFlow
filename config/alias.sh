@@ -1,0 +1,20 @@
+#!/bin/bash
+
+git config --file ./.gitconfig alias.ec 'config --global -e'
+git config --file ./.gitconfig alias.amend 'commit --amend'
+git config --file ./.gitconfig alias.br 'branch'
+git config --file ./.gitconfig alias.caa 'commit -a --amend -C HEAD'
+git config --file ./.gitconfig alias.ci 'commit -m'
+git config --file ./.gitconfig alias.co 'checkout'
+git config --file ./.gitconfig alias.cob 'checkout -b'
+git config --file ./.gitconfig alias.cp 'cherry-pick'
+git config --file ./.gitconfig alias.cpa 'cherry-pick --abort'
+git config --file ./.gitconfig alias.cpc 'cherry-pick --continue'
+git config --file ./.gitconfig alias.unstage 'reset HEAD'
+git config --file ./.gitconfig alias.rba 'rebase --abort'
+git config --file ./.gitconfig alias.rbc 'rebase --continue'
+git config --file ./.gitconfig alias.rbs 'rebase --skip'
+git config --file ./.gitconfig alias.logbase "log --pretty='%C(bold blue)%h%C(reset) |%C(auto)%d%C(reset) %C(white)%s%C(reset) %C(bold yellow)(%ar) on (%aD)%C(reset) %C(bold cyan)[%an]%C(reset)'"
+git config --file ./.gitconfig alias.st 'status'
+git config --file ./.gitconfig alias.pushf 'push --force-with-lease'
+git config --file ./.gitconfig alias.pusht 'push --follow-tags'
