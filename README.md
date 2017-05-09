@@ -8,7 +8,7 @@ This project seeks to emdody the goodness of OneFlow in four core Git aliases `b
 
 ## Getting Started
 1.	Clone this repo
-2.	From a shell prompt run `make-gitconfig.sh` - take a look a the local .gitconfig - to make changes to your global .gitconfig run `make-gitconfig.sh -g`
+2.	On *nix run `make-gitconfig.sh` - take a look a the local .gitconfig - to make changes to your global .gitconfig run `make-gitconfig.sh -g`. On Windows run `make-gitconfig.ps1` and/or `make-gitconfig.ps1 -g` respectively.
 
 ## Basic Workflow
 * Initial clone
@@ -26,7 +26,6 @@ This project seeks to emdody the goodness of OneFlow in four core Git aliases `b
     1. `git bdone`
 
 ## Todo
-1. PowerShell version of `make-gitconfig`
-2. Potentially more switches -  for example make minimal changes to .gitconfig, etc
-3. brelease
-4. ...
+1. Potentially more switches -  for example make minimal changes to .gitconfig, etc
+2. brelease
+3. ...
