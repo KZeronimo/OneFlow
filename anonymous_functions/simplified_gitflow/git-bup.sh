@@ -26,10 +26,8 @@ bup() {
             git pull;
         elif [[ $sync_status = 'in_sync' ]]; then
             git pprint -io "Branch '$br' is up-to-date";
-        fi;
-
         # If local branch upstream has been yanked then clean up
-        if [[ $sync_status = 'upstream_removed' ]]; then
+        elif [[ $sync_status = 'upstream_removed' ]]; then
             git pprint -wo "Unsetting upstream for '$br'!";
             git branch --unset-upstream;
         elif [[ $sync_status = 'no_upstream' ]]; then
