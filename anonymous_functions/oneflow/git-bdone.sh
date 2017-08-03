@@ -1,9 +1,8 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$'\n\t';
 
 bdone() {
-    git pprint -io "Updating branch '${2-develop}'" && git checkout "${2-develop}" && git pull && git bclean "${1-origin}" "${2-develop}" && git pprint -so "bdone succeeded!";
+    git pprint -if "Updating branch \x27${2-develop}\x27" && git checkout "${2-develop}" && git pull && git bclean "${1-origin}" "${2-develop}" && git pprint -sf "bdone succeeded!";
 };
 
 bdone "$@";

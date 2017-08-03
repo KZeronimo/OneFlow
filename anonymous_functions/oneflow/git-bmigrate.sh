@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$'\n\t';
 
 bmigrate() {
     local -r correct_br=${1:-};
@@ -11,20 +10,20 @@ bmigrate() {
     local num_commits=0;
     local mv_prompt='';
 
-    [[ -z $correct_br ]] && git pprint -eo "'correct_br' is required!" && exit 1;
-    [[ -z $target_br ]] && git pprint -eo "'target_br' is required!" && exit 1;
-    [[ -z $(git branch --list "$target_br") ]] && git pprint -eo "The branch '$target_br' must exist!" && exit 1;
-    [[ -z $(git branch --list "$wrong_br") ]] && git pprint -eo "The branch '$wrong_br' must exist!" && exit 1;
-    [[ $correct_br = "$wrong_br" ]] && git pprint -eo "Check the command parameters - 'correct_br' and 'wrong_br' can not be equal!" && exit 1;
-    [[ $correct_br = 'master' || $wrong_br = 'master' ]] && git pprint -eo "Modification of commits on 'master' is not allowed!" && exit 1;
-    [[ $correct_br = 'develop' ]] && git pprint -wf "You are attempting to move commits to 'develop' - You may not be able to push 'develop' directly to the remote!\n" '\n' && ABORT=$(git pprint -pd "Press ENTER to continue or (a) to abort: ") && grep -iq "^a$" <<< "$ABORT" && exit 1;
-    [[ $wrong_br != $(git symbolic-ref --short HEAD) ]] && git pprint -wf "Migration requires '$wrong_br' to be the current current branch - attempting to checkout '$wrong_br'!" '\n'  && [[ -z $(git checkout "$wrong_br" 2>/dev/null) ]] && git pprint -eo "Checkout of '$wrong_br' failed!" && exit 1;
+    [[ -z $correct_br ]] && git pprint -ef "\x27correct_br\x27 is required!" && exit 1;
+    [[ -z $target_br ]] && git pprint -ef "\x27target_br\x27 is required!" && exit 1;
+    [[ -z $(git branch --list "$target_br") ]] && git pprint -ef "The branch \x27$target_br\x27 must exist!" && exit 1;
+    [[ -z $(git branch --list "$wrong_br") ]] && git pprint -ef "The branch \x27$wrong_br\x27 must exist!" && exit 1;
+    [[ $correct_br = "$wrong_br" ]] && git pprint -ef "Check the command parameters - \x27correct_br\x27 and \x27wrong_br\x27 can not be equal!" && exit 1;
+    [[ $correct_br = 'master' || $wrong_br = 'master' ]] && git pprint -ef "Modification of commits on \x27master\x27 is not allowed!" && exit 1;
+    [[ $correct_br = 'develop' ]] && git pprint -wf "You are attempting to move commits to \x27develop\x27 - You may not be able to push \x27develop\x27 directly to the remote!\n" '\n' && ABORT=$(git pprint -pd "Press ENTER to continue or (a) to abort: ") && grep -iq "^a$" <<< "$ABORT" && exit 1;
+    [[ $wrong_br != $(git symbolic-ref --short HEAD) ]] && git pprint -wf "Migration requires \x27$wrong_br\x27 to be the current branch - attempting to checkout '$wrong_br'!" '\n'  && [[ -z $(git checkout "$wrong_br" 2>/dev/null) ]] && git pprint -ef "Checkout of '$wrong_br' failed!" && exit 1;
 
     if [[ -n $(git status --porcelain) ]]; then
         git bcm -d && did_commit=1;
-        mv_prompt="Commit '$(git rev-parse --short HEAD)' will be moved from '$wrong_br' to '$correct_br' - would you like to move additional commits? Max value is max_commits. Default value is 0: ";
+        mv_prompt="Commit \x27$(git rev-parse --short HEAD)\x27 will be moved from \x27$wrong_br\x27 to \x27$correct_br\x27 - would you like to move additional commits? Max value is max_commits. Default value is 0: ";
     else
-        mv_prompt="How many commits from '$wrong_br' to '$correct_br' would you like to move? Max value is max_commits. Default value is 0: ";
+        mv_prompt="How many commits from \x27$wrong_br\x27 to \x27$correct_br\x27 would you like to move? Max value is max_commits. Default value is 0: ";
     fi;
 
     if [[ -n $(git rev-parse --verify --quiet '@{u}' 2>/dev/null) && $(git rev-list --count @'{u}'..) -gt 0 ]]; then
@@ -38,7 +37,7 @@ bmigrate() {
         git logbase --graph "$target_br"..'HEAD';
         echo;
     else
-        git pprint -eo "No commits on '$wrong_br' can be safely moved!";
+        git pprint -ef "No commits on '$wrong_br' can be safely moved!";
         exit 1;
     fi;
 

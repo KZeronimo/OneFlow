@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$'\n\t';
 
 ispushed() {
     local has_remote_ref='';

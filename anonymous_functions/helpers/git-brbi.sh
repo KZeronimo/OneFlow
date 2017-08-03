@@ -1,15 +1,14 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$'\n\t';
 
 brbi() {
     if [[ $1 -eq 1 ]] || grep -iq "^true$" <<< "$(git config workflow.dorebase)"; then
-        git pprint -io "Checking if there are commits for interactive rebase";
+        git pprint -if "Checking if there are commits for interactive rebase";
         if [[ $(git rev-list --count develop..develop) -gt 0 ]]; then
-            git pprint -io "Starting interactive rebase for '$3'";
+            git pprint -if "Starting interactive rebase for \x27$3\x27";
             git rebase -i "$(git merge-base "$2" "$3")";
         else
-            git pprint -wo "No commits between '$2..$3' for interactive rebase!";
+            git pprint -wf "No commits between \x27$2..$3\x27 for interactive rebase!";
         fi;
     fi;
 };

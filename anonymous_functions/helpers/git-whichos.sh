@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$'\n\t';
 
 whichos() {
     local -r OS=$(uname -s);

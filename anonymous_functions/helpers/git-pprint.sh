@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$'\n\t';
 
 pprint() {
     local -r red=$(tput setaf 1);
@@ -47,7 +46,7 @@ pprint() {
         o)
             cmd_flg='o';;
         *)
-            echo "$(tput setaf 1)Invalid option expecting '<-e|g|i|p|s[d|o|f]>'!$(tput sgr 0)";
+            printf  "%b\n" "${red}Invalid option expecting \x27<-e|g|i|p|s[d|o|f]>\x27!${rst}";
             exit 1;;
         esac
     done;
@@ -55,11 +54,11 @@ pprint() {
 
     local string=${1:-};
     local -r prefix=${2:-};
-    local -r postfix=${3:-};
+    local -r postfix=${3:-}; 
 
-    [[ -z $style_flg ]] && { echo "${red}A flag '<-e|g|i|p|s>' indicating the output style is required!${rst}"; exit 1; };
-    [[ -z $cmd_flg ]] && { echo "${red}A flag '<-d|o|f>' indicating the command to use is required!${rst}"; exit 1; };
-    [[ -z $string ]] && { echo "${red}A string to output is required!${rst}"; exit 1; };
+    [[ -z $style_flg ]] && { printf "%b\n" "${red}A flag \x27<-e|g|i|p|s>\x27 indicating the output style is required!${rst}"; exit 1; };
+    [[ -z $cmd_flg ]] && { printf "%b\n" "${red}A flag x\27<-d|o|f>\x27 indicating the command to use is required!${rst}"; exit 1; };
+    [[ -z $string ]] && { printf "%b\n" "${red}A string to output is required!${rst}"; exit 1; };
 
     case $style_flg in
     e)

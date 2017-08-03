@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$'\n\t';
 
 trimcompactreplacespace() {
     local lwr_flg=0;
@@ -14,7 +13,7 @@ trimcompactreplacespace() {
         u)
             upr_flg=1;;
         *)
-            git pprint -eo "Invalid option expecting '[-l|u]'!";
+            git pprint -ef "Invalid option expecting \x27[-l|u]\x27!";
             exit 1;;
         esac
     done;
@@ -23,8 +22,8 @@ trimcompactreplacespace() {
     local -r string=${1:-};
     local pat=${2:-};
 
-    [[ -z $string ]] && { git pprint -eo "A string to operate on is required!"; exit 1; };
-    [[ -z $pat ]] && { git pprint -eo "A relacement string is required!"; exit 1; };
+    [[ -z $string ]] && { git pprint -ef "A string to operate on is required!"; exit 1; };
+    [[ -z $pat ]] && { git pprint -ef "A relacement string is required!"; exit 1; };
 
     pat='s/ /'"$pat"'/g';
     git trim "$string" | tr -s ' ' |

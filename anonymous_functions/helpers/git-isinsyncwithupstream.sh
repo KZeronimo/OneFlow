@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$' \n\t';
 
 isinsyncwithupstream() {
     local -r this_br=${1-$(git symbolic-ref --short HEAD)};
