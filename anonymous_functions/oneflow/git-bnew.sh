@@ -74,7 +74,7 @@ bnew() {
     br_desc=${1:-};
     [[ -z $br_desc ]] && { git pprint -ef "Option \x27-$br_flg\x27 requires an argument like my-new-branch!"; exit 1; };
 
-    br_name=${br_afx}"/${my_intls}/"$(git check-ref-format --branch "$(git trimcompactreplacespace -l "$br_desc" \x27-\x27)");
+    br_name=${br_afx}"/${my_intls}/"$(git check-ref-format --branch "$(git trimcompactreplacespace -l "$br_desc" "-")");
 
     if [[ -n $(git branch --list "$br_name") ]]; then
         git pprint -ef "A branch named \x27$br_name\x27 already exists!";

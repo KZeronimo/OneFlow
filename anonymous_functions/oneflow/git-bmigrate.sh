@@ -43,7 +43,7 @@ bmigrate() {
 
     [[ $did_commit -eq 1 ]] && max_commits=$((max_commits - 1));
     # Only prompt if there are additional commits to move
-    [[ $max_commits -gt 0 ]] && mv_prompt=$(sed 's/max_commits/'"$max_commits"'/g' <<< "$mv_prompt") && num_commits=$(git pprint -pd "$mv_prompt");
+    [[ $max_commits -gt 0 ]] && mv_prompt=$(sed "s/max_commits/$max_commits/g" <<< "$mv_prompt") && num_commits=$(git pprint -pd "$mv_prompt");
     [[ ${num_commits} =~ ^[0-9]{1,}$ ]] && { [[ $num_commits -gt $max_commits ]] && num_commits=$max_commits || :; } || num_commits=0;
 
     [[ $did_commit -eq 1 ]] && num_commits=$((num_commits + 1)); git migrate "$correct_br" "$target_br" "HEAD~$num_commits";

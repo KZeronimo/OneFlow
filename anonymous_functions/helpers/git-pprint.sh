@@ -77,8 +77,8 @@ pprint() {
 
     case $cmd_flg in
     d)
-        read -p "${prefix}${string}${postfix}" -r input;
-        echo "$input";;
+        read -p "$(printf "%b\n" "${prefix}${string}${postfix}")" -r input;
+        printf "%s" "$input";;
     o)
         echo "${prefix}${string}${postfix}";;
     f)

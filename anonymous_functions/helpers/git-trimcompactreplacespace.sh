@@ -25,8 +25,8 @@ trimcompactreplacespace() {
     [[ -z $string ]] && { git pprint -ef "A string to operate on is required!"; exit 1; };
     [[ -z $pat ]] && { git pprint -ef "A relacement string is required!"; exit 1; };
 
-    pat='s/ /'"$pat"'/g';
-    git trim "$string" | tr -s ' ' |
+    pat="s/ /$pat/g";
+    git trim "$string" | tr -s " " |
 
     if [[ lwr_flg -eq 1 ]]; then
         tr '[:upper:]' '[:lower:]' | sed -e "$pat";
