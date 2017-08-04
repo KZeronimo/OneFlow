@@ -59,7 +59,7 @@
 	lg = "!f() { git logbase --all --graph \"$@\"; }; f"
 	rlg = "!f() { git reflog \"$(git rev-parse --abbrev-ref HEAD)\"; }; f"
 	st = status
-	# simplified gitflow alias b*
+	# oneflow alias b*
 	# base command - bnew <-f|h|r[m|u]> branch short name
 	# creates and checkout new branch
 	# optionally migrates and or updates trunk branch (bpoint)
