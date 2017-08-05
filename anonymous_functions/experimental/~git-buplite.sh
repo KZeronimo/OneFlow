@@ -10,14 +10,14 @@ buplite() {
         r)
             rbi_flg=1;;
         *)
-            echo "$(tput setaf 1)Invalid option expecting \x27[-r]\x27!$(tput sgr 0)";
+            printf "%b\n" "$(tput setaf 1)Invalid option expecting \x27[-r]\x27!$(tput sgr 0)";
             exit 1;;
         esac
     done;
     shift $((OPTIND - 1));
 
     if [[ $this_br != "${2-develop}" ]]; then
-        echo "$(tput setaf 2)Updating branch \x27$this_br\x27!$(tput sgr 0)" && git pull "${1-origin}" "${2-develop}";
+        printf "%b\n" "$(tput setaf 2)Updating branch \x27$this_br\x27!$(tput sgr 0)" && git pull "${1-origin}" "${2-develop}";
     fi && git brbi ${rbi_flg} "${2-develop}" "$this_br";
 };
 

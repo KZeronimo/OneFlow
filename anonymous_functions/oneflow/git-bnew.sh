@@ -90,7 +90,7 @@ bnew() {
                 mgt_act_pat="^[nN]$|^[cC]$|^[aA]$";
             fi;
 
-            mgt_act=$(git pprint -pd "Default is commit to the the new branch \x27$br_name\x27 (n)?: ") && echo;
+            mgt_act=$(git pprint -pd "Default is commit to the the new branch \x27$br_name\x27 (n)?: ") && printf "\n";
             [[ $mgt_act =~ $mgt_act_pat ]] && mgt_act=$(git trim "$mgt_act" | tr '[:upper:]' '[:lower:]') || mgt_act="n";
             [[ $mgt_act = "a" ]] && exit 0;
 

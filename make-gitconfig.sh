@@ -30,7 +30,7 @@ make-gitconfig() {
         g)
             global_flg=1;;
         *)
-            echo "${red}Invalid option expecting '<-g>'!${rst}";
+            printf "%s\n" "${red}Invalid option expecting '<-g>'!${rst}";
             exit 1;;
         esac
     done

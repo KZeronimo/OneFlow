@@ -25,8 +25,8 @@ bcm() {
     if [[ $(git status --porcelain) ]]; then
         git pprint -gf "Ok - lets get your working directory committed - here is your status and the last 5 commits.\n" | fold -sw 100;
 
-        git status && echo;
-        git logbase --all --graph -5 && echo;
+        git status && printf "\n";
+        git logbase --all --graph -5 && printf "\n";
 
         add_param=$(git pprint -pd "Add tracked and untracked changes (a) or just tracked changes (t)? Default value is just tracked (t): ");
         grep -Eiq "^a$|^t$" <<< "$add_param" && add_param=$(git trim "$add_param" | tr '[:upper:]' '[:lower:]') || add_param="t";

@@ -16,7 +16,7 @@ pprint() {
     local style_flg='';
     local cmd_flg='';
 
-    while getopts ':egipswdof' flg; do
+    while getopts ':egipswdf' flg; do
         case $flg in
         # Error
         e)
@@ -42,11 +42,8 @@ pprint() {
         # Use printf
         f)
             cmd_flg='f';;
-        # Use echo
-        o)
-            cmd_flg='o';;
         *)
-            printf  "%b\n" "${red}Invalid option expecting \x27<-e|g|i|p|s[d|o|f]>\x27!${rst}";
+            printf  "%b\n" "${red}Invalid option expecting \x27<-e|g|i|p|s[d|f]>\x27!${rst}";
             exit 1;;
         esac
     done;
@@ -54,10 +51,10 @@ pprint() {
 
     local string=${1:-};
     local -r prefix=${2:-};
-    local -r postfix=${3:-}; 
+    local -r postfix=${3:-};
 
     [[ -z $style_flg ]] && { printf "%b\n" "${red}A flag \x27<-e|g|i|p|s>\x27 indicating the output style is required!${rst}"; exit 1; };
-    [[ -z $cmd_flg ]] && { printf "%b\n" "${red}A flag x\27<-d|o|f>\x27 indicating the command to use is required!${rst}"; exit 1; };
+    [[ -z $cmd_flg ]] && { printf "%b\n" "${red}A flag \x27<-d|f>\x27 indicating the command to use is required!${rst}"; exit 1; };
     [[ -z $string ]] && { printf "%b\n" "${red}A string to output is required!${rst}"; exit 1; };
 
     case $style_flg in
@@ -79,8 +76,6 @@ pprint() {
     d)
         read -p "$(printf "%b\n" "${prefix}${string}${postfix}")" -r input;
         printf "%s" "$input";;
-    o)
-        echo "${prefix}${string}${postfix}";;
     f)
         printf "%b\n" "${prefix}${string}${postfix}";;
     esac;

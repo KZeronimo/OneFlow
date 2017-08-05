@@ -15,7 +15,7 @@ whichos() {
         os='WIN';
     fi;
 
-    echo "$os";
+    printf "%s\n" "$os";
 };
 
 whichos;

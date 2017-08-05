@@ -28,14 +28,14 @@ bmigrate() {
 
     if [[ -n $(git rev-parse --verify --quiet '@{u}' 2>/dev/null) && $(git rev-list --count @'{u}'..) -gt 0 ]]; then
         max_commits=$(git rev-list --count @'{u}'..);
-        echo;
+        printf "\n";
         git logbase @'{u}'..;
-        echo;
+        printf "\n";
     elif [[ $(git rev-list --count "$target_br"..HEAD) -gt 0 ]]; then
         max_commits=$(git rev-list --count "$target_br"..HEAD);
-        echo;
+        printf "\n";
         git logbase --graph "$target_br"..'HEAD';
-        echo;
+        printf "\n";
     else
         git pprint -ef "No commits on '$wrong_br' can be safely moved!";
         exit 1;

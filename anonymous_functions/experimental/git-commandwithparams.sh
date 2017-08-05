@@ -1,4 +1,4 @@
 #!/bin/bash
 set -euo pipefail;
 
-echo "${1-1}" "${2-2}";
+printf "%s/n" "${1-1} ${2-2}";
