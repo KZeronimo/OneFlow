@@ -1,7 +1,9 @@
 #!/bin/bash
 
-git config --file "$1" core.editor 'code --wait'
+git config --file "$1" core.editor 'vim'
+git config --file "$1" core.autocrlf 'input'
 git config --file "$1" core.safecrlf 'warn'
+git config --file "$1" core.pager 'less -RFX'
 git config --file "$1" branch.develop.mergeoptions '--no-ff'
 git config --file "$1" branch.master.mergeoptions '--ff-only'
 git config --file "$1" fetch.prune 'true'
