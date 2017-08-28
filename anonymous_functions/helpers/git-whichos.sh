@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$'\n\t';
 
 whichos() {
     local -r OS=$(uname -s);
@@ -16,7 +15,7 @@ whichos() {
         os='WIN';
     fi;
 
-    echo "$os";
+    printf "%s\n" "$os";
 };
 
 whichos;

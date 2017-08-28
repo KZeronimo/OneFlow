@@ -4,6 +4,7 @@
 )
 
 git config --file "$1" core.editor 'code --wait'
+git config --file "$1" core.autocrlf 'true'
 git config --file "$1" core.safecrlf 'warn'
 git config --file "$1" branch.develop.mergeoptions '--no-ff'
 git config --file "$1" branch.master.mergeoptions '--ff-only'

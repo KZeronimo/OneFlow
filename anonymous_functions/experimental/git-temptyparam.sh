@@ -1,5 +1,4 @@
 #!/bin/bash
 set -euo pipefail;
-IFS=$'\n\t';
 
-if [[ ! -z ${1:-} ]]; then echo "$1"; echo "${1// }"; else echo 'Empty param'; fi;
+if [[ ! -z ${1:-} ]]; then printf "%s\n" "$1"; printf "%s\n" "${1// }"; else printf "%s\n" "Empty param"; fi;

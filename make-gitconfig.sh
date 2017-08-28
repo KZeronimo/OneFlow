@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-IFS=$'\n\t'
 
 make-gitconfig() {
     local alias_body=''
@@ -31,7 +30,7 @@ make-gitconfig() {
         g)
             global_flg=1;;
         *)
-            echo "${red}Invalid option expecting '<-g>'!${rst}";
+            printf "%s\n" "${red}Invalid option expecting '<-g>'!${rst}";
             exit 1;;
         esac
     done
@@ -77,7 +76,7 @@ make-gitconfig() {
         printf "%s==> $alias_name built\n%s" "${grn}" "${rst}"
 
         # Let git write anonymous function aliases - will do a better job of escaping
-        alias_body="!f() { $alias_body }; f"
+        alias_body="!bash -c '$alias_body' -"
         git config --file "$gitconfig_path" "alias.${alias_name}" "$alias_body"
 
         printf "%s\t==> $alias_name written\n%s" "${grn}" "${rst}"

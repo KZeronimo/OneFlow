@@ -48,7 +48,7 @@ try {
             # Strip all blank lines - all whitespace - lines beginning with #
             (Get-Content $files[$i].FullName) -match '\S' | % { $_.Trim() } | Where { $_ -notmatch '^#' } | Set-Content -Path $tempAliasFile
             # Join all lines into a single line - PS specific - escape double quotes since this is a command line parameter to an external exe and we need to preserve internal quotes
-            $aliasBody = "!f() { $((Get-Content $tempAliasFile) -join ' ' | % { $_ -replace '"', '\`"' } ) }; f"
+            $aliasBody = "!bash -c '$((Get-Content $tempAliasFile) -join ' ' | % { $_ -replace '"', '\`"' } )' -"
 
             Write-Host "==> $aliasName built" -ForegroundColor Green
             $git = "git"
