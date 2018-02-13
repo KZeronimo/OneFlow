@@ -112,7 +112,7 @@
 [difftool]
 	prompt = false
 [difftool "semanticmerge"]
-	cmd = \"C:\\Users\\<UserName>\\AppData\\Local\\semanticmerge\\semanticmergetool.exe\" -s \"$LOCAL\" -d \"$REMOTE\"
+	cmd = \"C:\\Users\\<UserName>\\AppData\\Local\\semanticmerge\\semanticmergetool.exe\" -s \"$LOCAL\" -d \"$REMOTE\" --nolangwarn
 [difftool "vscode"]
 	cmd = code --wait --diff $LOCAL $REMOTE
 [merge]
@@ -121,5 +121,5 @@
   	prompt = false
   	keepBackup = false
 [mergetool "semanticmerge"]
-	cmd = \"C:\\Users\\<UserName>\\AppData\\Local\\semanticmerge\\semanticmergetool.exe\" -s \"$LOCAL\" -d \"$REMOTE\" -b \"$BASE\" -r \"$MERGED\"
+	cmd = \"C:\\Users\\<UserName>\\AppData\\Local\\semanticmerge\\semanticmergetool.exe\" -s \"$REMOTE\" -d \"$LOCAL\" -b \"$BASE\" -r \"$MERGED\" -a --nolangwarn
 	trustExitCode = true
