@@ -85,7 +85,7 @@ bup() {
             # If this is a feature branch then rebase onto given branch point
             if grep -q "^feature" <<< "$this_br" && [[ $(git show-ref --heads -s "$br_point") != $(git merge-base "$br_point" "$this_br") ]]; then
                 git pprint -if "Replaying \x27$this_br\x27 onto \x27$br_point\x27";
-                git rebase -p "$br_point" && did_br_rply=1;
+                git rebase -r "$br_point" && did_br_rply=1;
             fi; } && git brbi ${rbi_flg} "$br_point" "$this_br" && did_br_rbi=1;
         elif [[ $rbi_flg -eq 1 && $this_br = 'develop' ]]; then
             git pprint -wf "Rebase is not allowed for \x27develop\x27!";
