@@ -6,8 +6,6 @@
 	editor = code --wait
 	safecrlf = warn
 	autocrlf = true
-[credential]
-	helper = manager
 [branch "develop"]
 	mergeoptions = --no-ff
 [branch "master"]
