@@ -1,11 +1,11 @@
-﻿ Param (
-    [parameter(Mandatory=$false)]
+﻿Param (
+    [parameter(Mandatory = $false)]
     [switch] $g
 )
 
 function Get-ScriptDirectory {
-  $thisName = $MyInvocation.MyCommand.Name
-  [IO.Path]::GetDirectoryName((Get-Content function:$thisName).File)
+    $thisName = $MyInvocation.MyCommand.Name
+    [IO.Path]::GetDirectoryName((Get-Content function:$thisName).File)
 }
 
 try {
@@ -13,12 +13,12 @@ try {
     Set-Location -Path $scriptPath
 
     [string] $aliasBody = ''
-    $aliasName=''
-    $gitConfigPath=''
-    $tempAliasFile=''
+    $aliasName = ''
+    $gitConfigPath = ''
+    $tempAliasFile = ''
 
     $gitConfigPath = if ( $g ) { Join-Path $env:UserProfile ".gitconfig" } else { Join-Path ${scriptPath} ".gitconfig" }
-    if ( $g )  { Write-Host "==> Writing to global gitconfig!" -ForegroundColor Red }
+    if ( $g ) { Write-Host "==> Writing to global gitconfig!" -ForegroundColor Red }
 
     # Backup gitconfig
     Copy-Item $gitConfigPath "$gitConfigPath.bak"
@@ -37,20 +37,21 @@ try {
     Write-Host "==> Adding anonymous function aliases" -ForegroundColor Green
 
     $files = Get-ChildItem -Path "$scriptPath\anonymous_functions" -Recurse -Include *.sh, *.ps1
-    for ($i=0; $i -lt $files.Count; $i++) {
-        if( $files[$i].BaseName -eq "make-gitconfig" ) { continue }
-        if( ($files[$i].BaseName | Select-String "~") ) { Write-Host $files[$i].BaseName "is WIP - skipping!" -ForegroundColor Yellow; continue }
+    for ($i = 0; $i -lt $files.Count; $i++) {
+        if ( $files[$i].BaseName -eq "make-gitconfig" ) { continue }
+        if ( ($files[$i].BaseName | Select-String "~") ) { Write-Host $files[$i].BaseName "is WIP - skipping!" -ForegroundColor Yellow; continue }
 
-        if( (Get-Content $files[$i]).Length -ne 0 ) {
-            $aliasName = $files[$i].BaseName.Replace('git-','')
+        if ( (Get-Content $files[$i]).Length -ne 0 ) {
+            $aliasName = $files[$i].BaseName.Replace('git-', '')
             $tempAliasFile = "$($files[$i].FullName).alias"
 
             # Strip all blank lines - all whitespace - lines beginning with #
             (Get-Content $files[$i].FullName) -match '\S' | % { $_.Trim() } | Where { $_ -notmatch '^#' } | Set-Content -Path $tempAliasFile
-            # Join all lines into a single line - PS specific - escape double quotes since this is a command line parameter to an external exe and we need to preserve internal quotes
-            $aliasBody = "!bash -c '$((Get-Content $tempAliasFile) -join ' ' | % { $_ -replace '"', '\`"' } )' -"
-
+            # Join all lines into a single line
+            $aliasBody = "!bash -c '$((Get-Content $tempAliasFile) -join ' ')' -"
             Write-Host "==> $aliasName built" -ForegroundColor Green
+
+            # Let git write anonymous function aliases - will do a better job of escaping
             $git = "git"
             & $git config "--file=$gitConfigPath" "alias.$aliasName" "$aliasBody"
             Write-Host "`t==> $aliasName written" -ForegroundColor Green
